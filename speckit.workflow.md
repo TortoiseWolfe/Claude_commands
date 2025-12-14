@@ -33,6 +33,7 @@ This command orchestrates the **complete** SpecKit workflow in sequence:
 **Skip if**: Constitution already exists at `.specify/memory/constitution.md`
 
 1. Check if constitution exists:
+
    ```bash
    test -f .specify/memory/constitution.md && echo "EXISTS" || echo "MISSING"
    ```
@@ -63,15 +64,18 @@ This command orchestrates the **complete** SpecKit workflow in sequence:
    - Use action-noun format (e.g., "add-user-auth", "fix-payment-bug")
 
 3. Check for existing branches before creating:
+
    ```bash
    git fetch --all --prune
    ```
+
    - Check remote branches: `git ls-remote --heads origin | grep -E 'refs/heads/[0-9]+-<short-name>$'`
    - Check local branches: `git branch | grep -E '^[* ]*[0-9]+-<short-name>$'`
    - Check specs directories: Look for `specs/[0-9]+-<short-name>`
    - Use the next available number (highest + 1)
 
 4. Run the branch creation script:
+
    ```bash
    .specify/scripts/bash/create-new-feature.sh --json "$ARGUMENTS" --number <N> --short-name "<short-name>" "<feature description>"
    ```
@@ -91,6 +95,7 @@ This command orchestrates the **complete** SpecKit workflow in sequence:
    - Success criteria are measurable and technology-agnostic
 
 8. **CHECKPOINT**: Report completion:
+
    > "Phase 1 complete: Branch `<branch-name>` created with spec at `<spec-path>`.
    >
    > Ready to proceed with clarification to refine the specification."
@@ -101,9 +106,10 @@ This command orchestrates the **complete** SpecKit workflow in sequence:
 
 ### Phase 2: Specification Clarification (`/speckit.clarify`)
 
-**Purpose**: Resolve all ambiguities through targeted questions
+**Purpose**: Resolve ALL ambiguities until every taxonomy category is Clear
 
 1. Run prerequisite check:
+
    ```bash
    .specify/scripts/bash/check-prerequisites.sh --json --paths-only
    ```
@@ -119,23 +125,25 @@ This command orchestrates the **complete** SpecKit workflow in sequence:
    - Terminology & consistency
    - Completion signals
 
-3. Generate prioritized clarification questions:
+3. Generate prioritized clarification questions (**NO QUESTION LIMIT**):
    - Present ONE question at a time
    - Provide **recommended option** with reasoning
    - Format as table with options
    - Accept user's choice, "yes/recommended", or custom answer
-   - Continue until all meaningful ambiguities are resolved
+   - **Continue until ALL taxonomy categories reach "Clear" status**
 
 4. After each answer, update the spec immediately:
    - Add to `## Clarifications` section with `### Session YYYY-MM-DD`
    - Apply changes to relevant sections
    - Save atomically after each integration
 
-5. Stop when:
-   - All ambiguities resolved
-   - User signals completion ("done", "good", "no more")
+5. Stop ONLY when:
+   - **ALL taxonomy categories have reached "Clear" status**
+   - User explicitly says "skip clarification" (with risk acknowledgment)
+   - **DO NOT** stop on casual signals like "done", "good", "no more"
 
 6. **CHECKPOINT**: Report completion:
+
    > "Phase 2 complete: <N> clarifications resolved.
    >
    > Coverage summary:
@@ -156,6 +164,7 @@ This command orchestrates the **complete** SpecKit workflow in sequence:
 **Purpose**: Generate implementation plan and design artifacts
 
 1. Run setup script:
+
    ```bash
    .specify/scripts/bash/setup-plan.sh --json
    ```
@@ -181,6 +190,7 @@ This command orchestrates the **complete** SpecKit workflow in sequence:
    - `quickstart.md` - Integration scenarios
 
 6. Update agent context:
+
    ```bash
    .specify/scripts/bash/update-agent-context.sh claude
    ```
@@ -188,9 +198,11 @@ This command orchestrates the **complete** SpecKit workflow in sequence:
 7. Re-evaluate Constitution Check post-design
 
 8. **CHECKPOINT**: Report completion:
+
    > "Phase 3 complete: Implementation plan generated.
    >
    > Artifacts created:
+   >
    > - `plan.md` - Technical implementation plan
    > - `research.md` - Technical decisions
    > - `data-model.md` - Entity definitions
@@ -210,6 +222,7 @@ This command orchestrates the **complete** SpecKit workflow in sequence:
 **CRITICAL CONCEPT**: Checklists test the REQUIREMENTS, not the implementation.
 
 1. Run prerequisite check:
+
    ```bash
    .specify/scripts/bash/check-prerequisites.sh --json
    ```
@@ -241,6 +254,7 @@ This command orchestrates the **complete** SpecKit workflow in sequence:
    - ❌ "Test hover states work correctly"
 
 7. **CHECKPOINT**: Report completion:
+
    > "Phase 4 complete: Requirements quality checklist generated.
    >
    > Checklist: `<checklist-path>`
@@ -258,6 +272,7 @@ This command orchestrates the **complete** SpecKit workflow in sequence:
 **Purpose**: Create actionable, dependency-ordered task list
 
 1. Run prerequisite check:
+
    ```bash
    .specify/scripts/bash/check-prerequisites.sh --json
    ```
@@ -279,15 +294,19 @@ This command orchestrates the **complete** SpecKit workflow in sequence:
    - **Final Phase**: Polish & cross-cutting concerns
 
 5. Task format (REQUIRED):
+
    ```
    - [ ] [TaskID] [P?] [Story?] Description with file path
    ```
+
    - Example: `- [ ] T012 [P] [US1] Create User model in src/models/user.py`
 
 6. **CHECKPOINT**: Report completion:
+
    > "Phase 5 complete: Task list generated.
    >
    > Summary:
+   >
    > - Total tasks: <N>
    > - Phases: <N>
    > - Parallel opportunities: <N>
@@ -301,11 +320,12 @@ This command orchestrates the **complete** SpecKit workflow in sequence:
 
 ### Phase 6: Consistency Analysis (`/speckit.analyze`)
 
-**Purpose**: Non-destructive cross-artifact consistency check
+**Purpose**: Cross-artifact consistency check with automatic remediation
 
-**STRICTLY READ-ONLY**: This phase does NOT modify any files.
+**FULL REMEDIATION MODE**: This phase automatically applies fixes for ALL issues until zero remain.
 
 1. Run prerequisite check:
+
    ```bash
    .specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks
    ```
@@ -336,31 +356,34 @@ This command orchestrates the **complete** SpecKit workflow in sequence:
    - **MEDIUM**: Terminology drift, missing non-functional coverage
    - **LOW**: Style improvements, minor redundancy
 
-6. Generate analysis report (Markdown, not written to file):
-   - Findings table
-   - Coverage summary table
-   - Constitution alignment issues
-   - Metrics: Total requirements, tasks, coverage %, issue counts
+6. **Apply ALL Remediations** (do not ask for permission):
+   - Fix ALL issues regardless of severity (CRITICAL, HIGH, MEDIUM, LOW)
+   - Merge duplicates, replace vague terms, add missing items
+   - Update spec.md, plan.md, tasks.md as needed
+   - Save files atomically after fixes
 
-7. **CHECKPOINT**: Report completion:
-   > "Phase 6 complete: Consistency analysis finished.
+7. **Re-verify until zero issues**:
+   - Re-run all detection passes
+   - Apply additional fixes if needed
+   - Repeat until analysis shows zero issues
+
+8. **CHECKPOINT**: Report completion:
+
+   > "Phase 6 complete: Consistency analysis and remediation finished.
    >
-   > Metrics:
+   > Issues found and fixed: <N>
+   > Files modified: [list]
+   >
+   > Final metrics (all should be zero):
+   >
    > - Requirements: <N>
    > - Tasks: <N>
-   > - Coverage: <N>%
-   > - Critical issues: <N>
-   > - High issues: <N>
+   > - Coverage: 100%
+   > - Remaining issues: 0
    >
-   > [If CRITICAL issues]: Recommend resolving before implementation.
-   > [If no CRITICAL]: Ready to proceed.
-   >
-   > Would you like to:
-   > - **Continue**: Proceed to GitHub issues (optional) or implementation
-   > - **Fix**: Address critical issues first
-   > - **Remediate**: Get suggested fixes for top issues"
+   > All artifacts are consistent. Ready to proceed to GitHub issues or implementation."
 
-   Wait for user response before proceeding.
+   Wait for user confirmation before proceeding.
 
 ---
 
@@ -371,14 +394,17 @@ This command orchestrates the **complete** SpecKit workflow in sequence:
 **Skip if**: User declines or no GitHub MCP server available
 
 1. Run prerequisite check:
+
    ```bash
    .specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks
    ```
 
 2. Verify Git remote is GitHub:
+
    ```bash
    git config --get remote.origin.url
    ```
+
    - **ONLY proceed if remote is a GitHub URL**
    - **NEVER create issues in non-matching repositories**
 
@@ -388,6 +414,7 @@ This command orchestrates the **complete** SpecKit workflow in sequence:
    - Link related issues
 
 4. **CHECKPOINT**: Report completion:
+
    > "Phase 7 complete: <N> GitHub issues created.
    >
    > Issues: [list of issue URLs]
@@ -403,6 +430,7 @@ This command orchestrates the **complete** SpecKit workflow in sequence:
 **Purpose**: Execute the implementation plan
 
 1. Run prerequisite check:
+
    ```bash
    .specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks
    ```
@@ -442,11 +470,13 @@ This command orchestrates the **complete** SpecKit workflow in sequence:
    > "Implementation complete!
    >
    > Summary:
+   >
    > - Tasks completed: <N>/<N>
    > - Tests: <status>
    > - Branch: `<branch-name>`
    >
    > Next steps:
+   >
    > - Review changes: `git diff main`
    > - Create PR: `/ship` or `gh pr create`"
 
@@ -456,17 +486,17 @@ This command orchestrates the **complete** SpecKit workflow in sequence:
 
 Include these in `$ARGUMENTS` to modify behavior:
 
-| Flag | Effect |
-|------|--------|
-| `--skip-constitution` | Skip Phase 0 (constitution check) |
-| `--skip-clarify` | Skip Phase 2 (clarification) - higher rework risk |
-| `--skip-checklist` | Skip Phase 4 (requirements validation) |
-| `--skip-analyze` | Skip Phase 6 (consistency analysis) |
-| `--skip-issues` | Skip Phase 7 (GitHub issues) |
-| `--to-spec` | Stop after Phase 1 (specification only) |
-| `--to-plan` | Stop after Phase 3 (planning only) |
-| `--to-tasks` | Stop after Phase 5 (task generation only) |
-| `--dry-run` | Run through Phase 6, skip implementation |
+| Flag                  | Effect                                            |
+| --------------------- | ------------------------------------------------- |
+| `--skip-constitution` | Skip Phase 0 (constitution check)                 |
+| `--skip-clarify`      | Skip Phase 2 (clarification) - higher rework risk |
+| `--skip-checklist`    | Skip Phase 4 (requirements validation)            |
+| `--skip-analyze`      | Skip Phase 6 (consistency analysis)               |
+| `--skip-issues`       | Skip Phase 7 (GitHub issues)                      |
+| `--to-spec`           | Stop after Phase 1 (specification only)           |
+| `--to-plan`           | Stop after Phase 3 (planning only)                |
+| `--to-tasks`          | Stop after Phase 5 (task generation only)         |
+| `--dry-run`           | Run through Phase 6, skip implementation          |
 
 ---
 
@@ -497,7 +527,8 @@ Include these in `$ARGUMENTS` to modify behavior:
 - Preserve all artifacts even on failure
 - Use absolute paths throughout
 - Follow Docker-first development practices from CLAUDE.md
-- Constitution violations are always CRITICAL and block implementation
-- Ask as many clarification questions as needed to resolve all ambiguities
+- Constitution violations are always CRITICAL and must be fixed immediately
+- **Clarify phase**: Ask as many questions as needed until ALL categories are Clear (no question limit)
+- **Analyze phase**: Apply ALL remediations automatically until zero issues remain (not read-only)
 - Checklists test REQUIREMENTS quality, not implementation behavior
-- Analyze phase is READ-ONLY (no file modifications)
+- The goal is **complete coverage and zero issues** before proceeding to implementation
